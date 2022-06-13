@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="create a new user document in database" type="FlutterTestConfigType" factoryName="Flutter Test" nameIsGenerated="true">
+    <option name="testName" value="create a new user document in database" />
+    <option name="testFile" value="$PROJECT_DIR$/chat/test/user_service_test.dart" />
+    <option name="additionalArgs" value="--no-sound-null-safety" />
+    <method v="2" />
+  </configuration>
+</component>
