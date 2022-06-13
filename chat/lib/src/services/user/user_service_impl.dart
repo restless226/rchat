@@ -6,12 +6,12 @@ import 'package:chat/src/services/user/user_service_contract.dart';
 import 'package:rethinkdb_dart/rethinkdb_dart.dart';
 
 class UserService implements IUserService {
-  
+
   final Connection _connection;
   final Rethinkdb _rethinkdb;
 
   UserService(this._connection, this._rethinkdb);
-  
+
   @override
   Future<User> connect(User user) async {
     var data = user.toJson();
@@ -28,9 +28,12 @@ class UserService implements IUserService {
   }
 
   @override
-  Future<void> disconnect(User user) {
-    // TODO: implement disconnect
-    throw UnimplementedError();
+  Future<void> disconnect(User user) async {
+    await _rethinkdb
+        .table('users')
+        .update({'id': user.id, 'active': false, 'last_seen': DateTime.now()})
+        .run(_connection);
+    _connection.close();
   }
 
   @override
