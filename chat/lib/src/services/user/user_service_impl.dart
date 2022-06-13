@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chat/src/models/user.dart';
 import 'package:chat/src/services/user/user_service_contract.dart';
 // ignore: import_of_legacy_library_into_null_safe
@@ -32,9 +34,13 @@ class UserService implements IUserService {
   }
 
   @override
-  Future<List<User>> online() {
-    // TODO: implement online
-    throw UnimplementedError();
+  Future<List<User>> online() async {
+    Cursor _activeUsers = await _rethinkdb
+        .table('users')
+        .filter({'active': true})
+        .run(_connection);
+    final _activeUsersList = await _activeUsers.toList();
+    return _activeUsersList.map((item) => User.fromJson(item)).toList();
   }
 
 }

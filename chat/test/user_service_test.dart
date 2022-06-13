@@ -53,6 +53,7 @@ void main() {
     await cleanDb(rethinkdb, connection!);
   });
 
+  /// test for creating a new user
   test('create a new user document in database', () async {
     final user = User(
       username: 'test',
@@ -63,6 +64,21 @@ void main() {
 
     final userWithId = await userService!.connect(user);
     expect(userWithId.id, isNotEmpty);
+  });
+
+  /// test for fetching users which are online
+  test('get online users', () async {
+    final user = User(
+      username: 'test',
+      photoUrl: 'url',
+      active: true,
+      lastseen: DateTime.now(),
+    );
+
+    userService!.connect(user);
+
+    final users = await userService!.online();
+    expect(users.length, 1);
   });
 }
 
