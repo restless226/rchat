@@ -10,10 +10,10 @@ class User {
   String? get id => _id;
 
   User({
-    required String username,
-    required String photoUrl,
-    required bool active,
-    required DateTime lastseen,
+    @required this.username,
+    @required this.photoUrl,
+    @required this.active,
+    @required this.lastseen,
   });
 
   toJson() => {
