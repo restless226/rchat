@@ -12,6 +12,7 @@ class UserService implements IUserService {
 
   UserService(this._connection, this._rethinkdb);
 
+  /// creates a new user by connecting with rethinkDb
   @override
   Future<User> connect(User user) async {
     var data = user.toJson();
@@ -27,6 +28,7 @@ class UserService implements IUserService {
     return User.fromJson(result['changes'].first['new_val']);
   }
 
+  /// returns a list of users which are currently online
   @override
   Future<void> disconnect(User user) async {
     await _rethinkdb
@@ -36,6 +38,7 @@ class UserService implements IUserService {
     _connection.close();
   }
 
+  /// closes connection with rethinkDb when an user closes the application
   @override
   Future<List<User>> online() async {
     Cursor _activeUsers = await _rethinkdb
