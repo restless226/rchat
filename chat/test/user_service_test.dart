@@ -39,46 +39,46 @@ void main() {
 */
 
 void main() {
-  Rethinkdb rethinkdb = Rethinkdb();
-  Connection? connection;
-  UserService? userService;
+  Rethinkdb _rethinkdb = Rethinkdb();
+  Connection? _connection;
+  UserService? _userService;
 
   setUp(() async {
-    connection = await rethinkdb.connect(host: "127.0.0.1", port: 28015);
-    await createDb(rethinkdb, connection!);
-    userService = UserService(connection!, rethinkdb);
+    _connection = await _rethinkdb.connect(host: "127.0.0.1", port: 28015);
+    await createDb(_rethinkdb, _connection!);
+    _userService = UserService(_connection!, _rethinkdb);
   });
 
   tearDown(() async {
-    await cleanDb(rethinkdb, connection!);
+    await cleanDb(_rethinkdb, _connection!);
   });
 
   /// test for creating a new user
   test('create a new user document in database', () async {
-    final user = User(
+    final _user = User(
       username: 'test',
       photoUrl: 'url',
       active: true,
       lastseen: DateTime.now(),
     );
 
-    final userWithId = await userService!.connect(user);
-    expect(userWithId.id, isNotEmpty);
+    final _userWithId = await _userService!.connect(_user);
+    expect(_userWithId.id, isNotEmpty);
   });
 
   /// test for fetching users which are online
   test('get online users', () async {
-    final user = User(
+    final _user = User(
       username: 'test',
       photoUrl: 'url',
       active: true,
       lastseen: DateTime.now(),
     );
 
-    userService!.connect(user);
+    _userService!.connect(_user);
 
-    final users = await userService!.online();
-    expect(users.length, 1);
+    final _users = await _userService!.online();
+    expect(_users.length, 1);
   });
 }
 
