@@ -1,6 +1,8 @@
 import 'package:chat/src/models/message.dart';
 import 'package:chat/src/models/user.dart';
+import 'package:chat/src/services/encryption/encryption_service_impl.dart';
 import 'package:chat/src/services/message/message_service_impl.dart';
+import 'package:encrypt/encrypt.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 // ignore: import_of_legacy_library_into_null_safe
@@ -16,7 +18,8 @@ void main() {
   setUp(() async {
     _connection = await _rethinkdb.connect(host: "127.0.0.1", port: 28015);
     await createDb(_rethinkdb, _connection!);
-    _messageService = MessageService(_connection!, _rethinkdb);
+    final _encryptionService = EncryptionService(Encrypter(AES(Key.fromLength(32))));
+    _messageService = MessageService(_connection!, _rethinkdb, encryption: _encryptionService);
   });
 
   tearDown(() async {
@@ -51,9 +54,13 @@ void main() {
 
   /// test to check whether messages are received successfully or not
   test('successfully subscribed and received messages', () async {
+
+    const contents = 'this is a test message sent from user1 to user2';
+
       _messageService!.messages(activeUser: _user2).listen(expectAsync1((message) {
         expect(message.to, _user2.id);
         expect(message.id, isNotEmpty);
+        expect(message.contents, contents);
       }, count: 2)
     );
 
@@ -61,14 +68,14 @@ void main() {
       from: _user1.id,
       to: _user2.id,
       timestamp: DateTime.now(),
-      contents: 'this is a test message sent from user1 to user2',
+      contents: contents,
     );
 
     Message _anotherMessage = Message(
       from: _user1.id,
       to: _user2.id,
       timestamp: DateTime.now(),
-      contents: 'this is a another message sent from user1 to user2',
+      contents: contents,
     );
 
     await _messageService?.send(_message);

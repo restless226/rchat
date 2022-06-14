@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:chat/src/models/message.dart';
+import 'package:chat/src/services/encryption/encryption_service_contract.dart';
 import 'package:chat/src/services/message/message_service_contract.dart';
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:rethinkdb_dart/rethinkdb_dart.dart';
@@ -11,6 +12,7 @@ class MessageService implements IMessageService {
 
   final Connection _connection;
   final Rethinkdb _rethinkdb;
+  final IEncryptionService? _encryptionService;
 
   /// broadcast stream can be subscribed by multiple clients
   /// whereas regular stream can be subscribed only by a single client after which it will be closed
@@ -18,7 +20,8 @@ class MessageService implements IMessageService {
 
   StreamSubscription? _changeFeed;
 
-  MessageService(this._connection, this._rethinkdb);
+  MessageService(this._connection, this._rethinkdb, {IEncryptionService? encryption})
+      : _encryptionService = encryption;
 
   @override
   dispose() {
@@ -27,7 +30,9 @@ class MessageService implements IMessageService {
   }
 
   Message _extractMessageFromFeed(feedData) {
-    final Message _message = Message.fromJson(feedData['new_val']);
+    var data = feedData['new_val'];
+    data['contents'] = _encryptionService?.decrypt(data['contents']);
+    final Message _message = Message.fromJson(data);
     return _message;
   }
 
@@ -77,9 +82,12 @@ class MessageService implements IMessageService {
 
   @override
   Future<bool> send(Message message) async {
+    var data = message.toJson();
+    data['contents'] = _encryptionService?.encrypt(message.contents!);
+
     Map record = await _rethinkdb
         .table('messages')
-        .insert(message.toJson())
+        .insert(data)
         .run(_connection);
 
     return record['inserted'] == 1;

@@ -1,5 +1,5 @@
 import 'package:chat/src/models/message.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../models/user.dart';
 
