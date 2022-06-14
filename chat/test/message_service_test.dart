@@ -54,9 +54,13 @@ void main() {
 
   /// test to check whether messages are received successfully or not
   test('successfully subscribed and received messages', () async {
+
+    const contents = 'this is a test message sent from user1 to user2';
+
       _messageService!.messages(activeUser: _user2).listen(expectAsync1((message) {
         expect(message.to, _user2.id);
         expect(message.id, isNotEmpty);
+        expect(message.contents, contents);
       }, count: 2)
     );
 
@@ -64,14 +68,14 @@ void main() {
       from: _user1.id,
       to: _user2.id,
       timestamp: DateTime.now(),
-      contents: 'this is a test message sent from user1 to user2',
+      contents: contents,
     );
 
     Message _anotherMessage = Message(
       from: _user1.id,
       to: _user2.id,
       timestamp: DateTime.now(),
-      contents: 'this is a another message sent from user1 to user2',
+      contents: contents,
     );
 
     await _messageService?.send(_message);
