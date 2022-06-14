@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 class User {
-  String? username;
-  String? photoUrl;
-  String? _id;
-  bool? active;
-  DateTime? lastseen;
+  final String? username;
+  final String? photoUrl;
+  String? _userId;
+  final bool? active;
+  final DateTime? lastseen;
 
-  String? get id => _id;
+  String? get id => _userId;
 
   User({
     @required this.username,
@@ -30,7 +30,7 @@ class User {
       active: json['active'],
       lastseen: json['lastseen'],
     );
-    user._id = json['id'];
+    user._userId = json['id'];
     return user;
   }
 }
