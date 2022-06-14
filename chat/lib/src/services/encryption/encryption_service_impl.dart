@@ -1,11 +1,14 @@
 import 'package:chat/src/services/encryption/encryption_service_contract.dart';
 // ignore: import_of_legacy_library_into_null_safe
 import 'package:encrypt/encrypt.dart';
+import 'package:flutter/cupertino.dart';
 
 class EncryptionService implements IEncryptionService {
 
-  late final Encrypter? _encrypter; /// being used for AES encryption
+  final Encrypter? _encrypter; /// being used for AES encryption
   final _iv = IV.fromLength(16);  /// Represents an Initialization Vector
+
+  EncryptionService(this._encrypter);
 
   @override
   String decrypt(String encryptedText) {
