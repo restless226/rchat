@@ -77,11 +77,9 @@ class MessageService implements IMessageService {
 
   @override
   Future<bool> send(Message message) async {
-    var data = message.toJson();
-
     Map record = await _rethinkdb
         .table('messages')
-        .insert(data)
+        .insert(message.toJson())
         .run(_connection);
 
     return record['inserted'] == 1;
