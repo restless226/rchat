@@ -20,15 +20,21 @@ class ReceiptService implements IReceiptService {
   ReceiptService(this._connection, this._rethinkdb);
 
   @override
-  void dispose() {
-    _controller.close();
-    _changeFeed?.cancel();
+  Future<void> dispose() async {
+    await _controller.close();
+    await _changeFeed?.cancel();
   }
 
   Receipt _extractReceiptFromFeed(feedData) {
-    var data = feedData['new_val'];
-    final Receipt _receipt = Receipt.fromJson(data);
-    return _receipt;
+    return Receipt.fromJson(feedData['new_val']);
+  }
+
+  _removeDeliveredReceipt(Receipt _receipt) {
+    _rethinkdb
+        .table('receipts')
+        .get(_receipt.id)
+        .delete({'return_changes': false})
+        .run(_connection);
   }
 
   /// stream consumes memory space hence it is not a good idea
@@ -51,6 +57,7 @@ class ReceiptService implements IReceiptService {
         if (feedData['new_val'] == null) return;
         final Receipt _receipt = _extractReceiptFromFeed(feedData);
         _controller.sink.add(_receipt);
+        _removeDeliveredReceipt(_receipt);
       })
       .catchError((error) => print("feedData event error = " + error.toString()))
       .onError((error, stackTrace) => print("stackTrace = " + error.toString()));

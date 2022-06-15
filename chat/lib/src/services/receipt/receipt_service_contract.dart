@@ -6,5 +6,5 @@ abstract class IReceiptService {
 
   Stream<Receipt> receipts(User user);
 
-  void dispose();
+  Future<void> dispose();
 }

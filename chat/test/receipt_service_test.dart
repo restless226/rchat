@@ -42,4 +42,31 @@ void main() {
     expect(result, true);
   });
 
+  /// test to check whether receipts are received successfully or not
+  test('successfully subscribed and received receipts', () async {
+      _receiptService!.receipts(_user).listen(expectAsync1((receipt) {
+        expect(receipt.recipient, _user.id);
+      }, count: 2)
+    );
+
+    /// delivery receipt from _user to _user itself
+    Receipt _receipt = Receipt(
+      recipient: _user.id,
+      messageId: '1234',
+      status: ReceiptStatus.delivered,
+      timestamp: DateTime.now(),
+    );
+
+    /// read receipt from _user to _user itself
+    Receipt _anotherReceipt = Receipt(
+      recipient: _user.id,
+      messageId: '1234',
+      status: ReceiptStatus.read,
+      timestamp: DateTime.now(),
+    );
+
+    await _receiptService?.send(_receipt);
+    await _receiptService?.send(_anotherReceipt);
+  });
+
 }
