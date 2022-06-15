@@ -2,6 +2,7 @@ import 'package:chat/src/models/message.dart';
 import 'package:chat/src/models/user.dart';
 import 'package:chat/src/services/encryption/encryption_service_impl.dart';
 import 'package:chat/src/services/message/message_service_impl.dart';
+// ignore: import_of_legacy_library_into_null_safe
 import 'package:encrypt/encrypt.dart';
 import 'package:flutter_test/flutter_test.dart';
 

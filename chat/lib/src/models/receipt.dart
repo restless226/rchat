@@ -36,8 +36,8 @@ class Receipt {
   Map<String, dynamic> toJson() => {
     'recipient': this.recipient,
     'messageId': this.messageId,
-    'status': this.status,
-    'timestamp': this.timestamp,
+    'status': status?.value(),
+    'timestamp': timestamp,
   };
 
   factory Receipt.fromJson(Map<String, dynamic> json) {
