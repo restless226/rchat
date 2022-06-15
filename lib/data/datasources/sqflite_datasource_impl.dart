@@ -48,6 +48,8 @@ class SqfliteDataSource implements IDataSource {
         AND messages.created_at = latest_messages.created_at'''
       );
 
+      if (chatsWithLatestMessages.isEmpty) return [];
+
       /// messages which are "delivered" but not read are unread messages
       final chatsWithUnreadMessages = await txn.rawQuery(''' 
         SELECT chat_id, count(*) as unread 
@@ -57,9 +59,22 @@ class SqfliteDataSource implements IDataSource {
         ''', ['delivered']
       );
 
-      return [];
+      return chatsWithLatestMessages.map<Chat>((row) {
+        final Object? unread = chatsWithUnreadMessages.firstWhere(
+            (ele) => row['chat_id'] == ele['chat_id'],
+            orElse: () => {'unread': 0})['unread'];
+        final chat = Chat.fromMap({'id': row['chat_id'], });
+        print("unread = " + unread.toString());
+        chat.unread = unread as int?;
+        chat.mostRecent = LocalMessage.fromMap(row);
+        return chat;
+      }).toList();
+
+      // return [];
+
       // return chatsWithLatestMessages.map<Chat>((row) {
-      //   final int? unread = int.tryParse(chatsWithUnreadMessages
+      //   final int? unread = int.tryParse(
+      //       chatsWithUnreadMessages
       //       .firstWhere(
       //             (ele) => row['chat_id'] ==  ele['chat_id'],
       //             orElse: () => {'unread': 0}
