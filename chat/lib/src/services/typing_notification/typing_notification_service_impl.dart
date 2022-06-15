@@ -79,5 +79,5 @@ class TypingNotificationService implements ITypingNotification {
     await _controller.close();
     await _changeFeed?.cancel();
   }
-  
+
 }
