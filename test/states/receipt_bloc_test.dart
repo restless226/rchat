@@ -1,5 +1,5 @@
 // import 'package:chat/chat.dart';
-// import 'package:my_chat_app/states_management/receipt/receipt_bloc.dart';
+// import 'package:my_chat_app/states_management/receipt/typing_notification_bloc.dart';
 // import 'package:flutter_test/flutter_test.dart';
 // import 'package:mockito/mockito.dart';
 //
