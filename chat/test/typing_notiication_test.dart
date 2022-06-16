@@ -1,5 +1,6 @@
 import 'package:chat/src/models/receipt.dart';
 import 'package:chat/src/models/typing_event.dart';
+import 'package:chat/src/models/typing_event_enums.dart';
 import 'package:chat/src/models/user.dart';
 import 'package:chat/src/services/receipt/receipt_service_impl.dart';
 import 'package:chat/src/services/typing_notification/typing_notification_service_impl.dart';
