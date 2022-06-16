@@ -4,6 +4,7 @@ abstract class MessageEvent extends Equatable {
   const MessageEvent();
 
   factory MessageEvent.onSubscribed(User user) => Subscribed(user);
+
   factory MessageEvent.onMessageSent(Message message) => MessageSent(message);
 
   @override
@@ -12,6 +13,7 @@ abstract class MessageEvent extends Equatable {
 
 class Subscribed extends MessageEvent {
   final User user;
+
   const Subscribed(this.user);
 
   @override
