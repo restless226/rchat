@@ -99,6 +99,8 @@ class SqfliteDataSource implements IDataSource {
             whereArgs: [chatId]
         );
 
+        if (listOfChatMaps.isEmpty) return null;
+
         final unread = Sqflite.firstIntValue(
           await txn.rawQuery(
               'SELECT COUNT(*) FROM MESSAGES WHERE chat_id = ? AND receipt = ?',
