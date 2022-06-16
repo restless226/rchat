@@ -4,12 +4,12 @@ import 'package:chat/chat.dart';
 /// not that it is separate from chat module
 
 class LocalMessage {
-  String? chatId;
-  String? _id;
-  Message? message;
-  ReceiptStatus? receipt;
+  String chatId;
+  String _id;
+  Message message;
+  ReceiptStatus receipt;
 
-  String? get id => _id;
+  String get id => _id;
 
   LocalMessage({this.chatId, this.message, this.receipt});
 

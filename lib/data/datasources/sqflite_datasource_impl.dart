@@ -60,12 +60,12 @@ class SqfliteDataSource implements IDataSource {
       );
 
       return chatsWithLatestMessages.map<Chat>((row) {
-        final Object? unread = chatsWithUnreadMessages.firstWhere(
+        final Object unread = chatsWithUnreadMessages.firstWhere(
             (ele) => row['chat_id'] == ele['chat_id'],
             orElse: () => {'unread': 0})['unread'];
         final chat = Chat.fromMap({'id': row['chat_id'], });
         print("unread = " + unread.toString());
-        chat.unread = unread as int?;
+        chat.unread = unread as int;
         chat.mostRecent = LocalMessage.fromMap(row);
         return chat;
       }).toList();
