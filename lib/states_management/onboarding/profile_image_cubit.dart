@@ -11,6 +11,7 @@ class ProfileImageCubit extends Cubit<File> {
   Future<void> getImage() async {
     PickedFile image =
         await _picker.getImage(source: ImageSource.gallery, imageQuality: 50);
+    if (image == null) return;
     emit(File(image.path));
   }
 }
