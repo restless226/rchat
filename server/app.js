@@ -1,7 +1,5 @@
-
 const express = require('express');
 const fileUpload = require('express-fileupload');
-const  {v4: uuidv4} = require('uuid');
 const app = express();
 
 app.use(fileUpload())
@@ -12,7 +10,6 @@ app.post('/upload', function(req, res) {
     let uploadPath;
     
     uploadFile = req.files?.picture
-    const generatedFileName = uuidv4() + '_' + uploadFile.name;
     uploadPath = __dirname + '/images/profile/' + uploadFile.name;
 
     uploadFile.mv(uploadPath, function(err) {
