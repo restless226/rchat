@@ -19,8 +19,8 @@ class MyApp extends StatelessWidget {
       title: 'Chat App',
       theme: lightTheme(context),
       darkTheme: darkTheme(context),
-      home: const Home(),
-      // home: CompositionRoot.composeOnboardingUI(),
+      // home: const Home(),
+      home: CompositionRoot.composeOnboardingUI(),
     );
   }
 }

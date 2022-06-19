@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:my_chat_app/states_management/home/home_cubit.dart';
+import 'package:my_chat_app/states_management/home/home_state.dart';
 import 'package:my_chat_app/ui/widgets/home/active/active_users.dart';
 import 'package:my_chat_app/ui/widgets/home/chats/chats.dart';
 import 'package:my_chat_app/ui/widgets/home/profile_image.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class Home extends StatefulWidget {
   const Home({Key key}) : super(key: key);
@@ -13,13 +16,12 @@ class Home extends StatefulWidget {
 class HomeState extends State<Home> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+    context.read<HomeCubit>().activeUsers();
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
   }
 
@@ -78,16 +80,26 @@ class HomeState extends State<Home> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(50),
                     ),
-                    child: const Align(
+                    child: Align(
                       alignment: Alignment.center,
-                      child: Text('Active'),
+                      child: BlocBuilder(
+                          builder: (BuildContext context, state) {
+                            if (state is HomeLoading) {
+                              return const Center(child: CircularProgressIndicator.adaptive());
+                            }
+                            if (state is HomeSuccess) {
+                              return Text("Active(${state.onlineUsers.length})");
+                            }
+                            return const Text("Active(0)");
+                        }
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          body: SafeArea(
+          body: const SafeArea(
             child: TabBarView(
               children: [
                 Chats(),
