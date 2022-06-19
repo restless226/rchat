@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:my_chat_app/composition_root.dart';
 import 'package:my_chat_app/theme.dart';
+import 'package:my_chat_app/ui/pages/home/home.dart';
 import 'package:my_chat_app/ui/pages/onboarding/onboarding.dart';
 
 void main() async {
@@ -18,7 +19,8 @@ class MyApp extends StatelessWidget {
       title: 'Chat App',
       theme: lightTheme(context),
       darkTheme: darkTheme(context),
-      home: CompositionRoot.composeOnboardingUI(),
+      home: const Home(),
+      // home: CompositionRoot.composeOnboardingUI(),
     );
   }
 }
