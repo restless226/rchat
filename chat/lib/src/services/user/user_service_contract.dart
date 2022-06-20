@@ -6,4 +6,6 @@ abstract class IUserService {
   Future<List<User>> online();  // returns a list of users which are currently online
 
   Future<void> disconnect(User user); // closes connection with rethinkDb when an user closes the application
+
+  Future<User> fetch(String id);
 }
