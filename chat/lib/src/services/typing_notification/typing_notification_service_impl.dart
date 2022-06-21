@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:chat/chat.dart';
 import 'package:chat/src/models/typing_event.dart';
 import 'package:chat/src/models/user.dart';
 import 'package:chat/src/services/typing_notification/typing_notification_service_contract.dart';
@@ -11,11 +12,12 @@ class TypingNotificationService implements ITypingNotification {
 
   final Connection _connection;
   final Rethinkdb _rethinkdb;
+  final IUserService _userService;
   final _controller = StreamController<TypingEvent>.broadcast();
 
   StreamSubscription? _changeFeed;
 
-  TypingNotificationService(this._connection, this._rethinkdb);
+  TypingNotificationService(this._connection, this._rethinkdb, this._userService);
 
   TypingEvent _extractTypingEventFromFeed(feedData) {
     return TypingEvent.fromJson(feedData['new_val']);
@@ -55,8 +57,11 @@ class TypingNotificationService implements ITypingNotification {
   }
 
   @override
-  Future<bool> send({@required TypingEvent? typingEvent, @required User? to}) async {
-   if (to?.active == false) return false;
+  Future<bool> send({@required TypingEvent? typingEvent}) async {
+
+   final receiver = await _userService.fetch(typingEvent?.to);
+
+   if (receiver.active == false) return false;
 
    var data = typingEvent?.toJson();
 

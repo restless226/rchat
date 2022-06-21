@@ -7,5 +7,5 @@ abstract class IUserService {
 
   Future<void> disconnect(User user); // closes connection with rethinkDb when an user closes the application
 
-  Future<User> fetch(String id);
+  Future<User> fetch(String? id);
 }

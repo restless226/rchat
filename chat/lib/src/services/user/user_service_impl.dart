@@ -50,7 +50,7 @@ class UserService implements IUserService {
   }
 
   @override
-  Future<User> fetch(String id) async {
+  Future<User> fetch(String? id) async {
     final user = await _rethinkdb.table('users').get(id).run(_connection);
     return User.fromJson(user);
   }

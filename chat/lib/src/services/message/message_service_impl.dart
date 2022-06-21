@@ -83,7 +83,7 @@ class MessageService implements IMessageService {
   }
 
   @override
-  Future<bool> send(Message message) async {
+  Future<Message> send(Message message) async {
     var data = message.toJson();
 
     if (_encryptionService != null) {
@@ -92,10 +92,10 @@ class MessageService implements IMessageService {
 
     Map record = await _rethinkdb
         .table('messages')
-        .insert(data)
+        .insert(data, {'return_changes': true})
         .run(_connection);
 
-    return record['inserted'] == 1;
+    return Message.fromJson(record['changes'].first['new_val']);
   }
 
 }
