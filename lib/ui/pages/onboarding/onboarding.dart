@@ -5,7 +5,7 @@ import 'package:my_chat_app/states_management/onboarding/onboarding_cubit.dart';
 import 'package:my_chat_app/states_management/onboarding/onboarding_state.dart';
 import 'package:my_chat_app/states_management/onboarding/profile_image_cubit.dart';
 import 'package:my_chat_app/ui/pages/onboarding/onboarding_router.dart';
-import 'package:my_chat_app/ui/widgets/onboarding/custom_text_field.dart';
+import 'package:my_chat_app/ui/widgets/shared/custom_text_field.dart';
 import 'package:my_chat_app/ui/widgets/onboarding/logo.dart';
 import 'package:my_chat_app/ui/widgets/onboarding/profile_upload.dart';
 

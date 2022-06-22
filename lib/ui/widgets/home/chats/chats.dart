@@ -4,18 +4,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:my_chat_app/colors.dart';
 import 'package:my_chat_app/models/chat.dart';
+import 'package:my_chat_app/states_management/home/chats_cubit.dart';
+import 'package:my_chat_app/states_management/message/message_bloc.dart';
 import 'package:my_chat_app/states_management/typing/typing_notification_bloc.dart';
 import 'package:my_chat_app/theme.dart';
+import 'package:my_chat_app/ui/pages/home/home_router.dart';
 import 'package:my_chat_app/ui/widgets/home/profile_image.dart';
+
 // ignore: implementation_imports
 import 'package:chat/src/models/typing_event_enums.dart';
-import '../../../../states_management/home/chats_cubit.dart';
-import '../../../../states_management/message/message_bloc.dart';
 
 class Chats extends StatefulWidget {
   final User user;
+  final IHomeRouter homeRouter;
 
-  const Chats(this.user, {Key key}) : super(key: key);
+  const Chats(this.user, this.homeRouter, {Key key}) : super(key: key);
 
   @override
   _ChatsState createState() => _ChatsState();
@@ -34,10 +37,7 @@ class _ChatsState extends State<Chats> {
 
   void _updateChatsOnMessageReceived() {
     final chatsCubit = context.read<ChatsCubit>();
-    context
-        .read<MessageBloc>()
-        .stream
-        .listen((state) async {
+    context.read<MessageBloc>().stream.listen((state) async {
       if (state is MessageReceivedSuccess) {
         await chatsCubit.viewModel.receiveMessages(state.message);
         chatsCubit.chats();
@@ -48,13 +48,22 @@ class _ChatsState extends State<Chats> {
   _buildListView() {
     return ListView.separated(
         padding: const EdgeInsets.only(top: 30.0, right: 16.0),
-        itemBuilder: (BuildContext context, index) => _chatItem(chats[index]),
+        itemBuilder: (BuildContext context, index) => GestureDetector(
+              onTap: () async {
+                await widget.homeRouter.onShowMessageThread(
+                  context,
+                  chats[index].from,
+                  widget.user,
+                  chatId: chats[index].id,
+                );
+              },
+              child: _chatItem(chats[index]),
+            ),
         separatorBuilder: (_, __) => const Divider(),
         itemCount: chats.length);
   }
 
-  _chatItem(Chat chat) =>
-      ListTile(
+  _chatItem(Chat chat) => ListTile(
         contentPadding: const EdgeInsets.only(left: 16.0),
         leading: ProfileImage(
           imageUrl: chat.from.photoUrl,
@@ -62,14 +71,10 @@ class _ChatsState extends State<Chats> {
         ),
         title: Text(
           chat.from.username,
-          style: Theme
-              .of(context)
-              .textTheme
-              .subtitle2
-              .copyWith(
-            fontWeight: FontWeight.bold,
-            color: isLightTheme(context) ? Colors.black : Colors.white,
-          ),
+          style: Theme.of(context).textTheme.subtitle2.copyWith(
+                fontWeight: FontWeight.bold,
+                color: isLightTheme(context) ? Colors.black : Colors.white,
+              ),
         ),
         subtitle: BlocBuilder<TypingNotificationBloc, TypingNotificationState>(
           builder: (_, state) {
@@ -82,16 +87,18 @@ class _ChatsState extends State<Chats> {
             if (state is TypingNotificationReceivedSuccess &&
                 state.event.event == Typing.stop &&
                 state.event.from == chat.id) {
-              this.typingEvents.removeWhere((e) => e == state.event.from,
-              );
+              this.typingEvents.removeWhere(
+                    (e) => e == state.event.from,
+                  );
             }
 
             if (this.typingEvents.contains(chat.id)) {
-              return Text('typing...', style: Theme
-                  .of(context)
-                  .textTheme
-                  .caption
-                  .copyWith(fontStyle: FontStyle.italic),
+              return Text(
+                'typing...',
+                style: Theme.of(context)
+                    .textTheme
+                    .caption
+                    .copyWith(fontStyle: FontStyle.italic),
               );
             }
 
@@ -100,14 +107,12 @@ class _ChatsState extends State<Chats> {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               softWrap: true,
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .overline
-                  .copyWith(
-                color: isLightTheme(context) ? Colors.black54 : Colors.white70,
-                fontWeight: chat.unread > 0 ? FontWeight.bold : FontWeight.normal,
-              ),
+              style: Theme.of(context).textTheme.overline.copyWith(
+                    color:
+                        isLightTheme(context) ? Colors.black54 : Colors.white70,
+                    fontWeight:
+                        chat.unread > 0 ? FontWeight.bold : FontWeight.normal,
+                  ),
             );
           },
         ),
@@ -116,14 +121,10 @@ class _ChatsState extends State<Chats> {
           children: [
             Text(
               DateFormat('h:mm a').format(chat.mostRecent.message.timestamp),
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .overline
-                  .copyWith(
-                color:
-                isLightTheme(context) ? Colors.black54 : Colors.white70,
-              ),
+              style: Theme.of(context).textTheme.overline.copyWith(
+                    color:
+                        isLightTheme(context) ? Colors.black54 : Colors.white70,
+                  ),
             ),
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
@@ -131,21 +132,17 @@ class _ChatsState extends State<Chats> {
                 borderRadius: BorderRadius.circular(50),
                 child: chat.unread > 0
                     ? Container(
-                  height: 15,
-                  width: 15,
-                  color: kPrimary,
-                  alignment: Alignment.center,
-                  child: Text(
-                    chat.unread.toString(),
-                    style: Theme
-                        .of(context)
-                        .textTheme
-                        .overline
-                        .copyWith(
-                      color: Colors.white,
-                    ),
-                  ),
-                )
+                        height: 15,
+                        width: 15,
+                        color: kPrimary,
+                        alignment: Alignment.center,
+                        child: Text(
+                          chat.unread.toString(),
+                          style: Theme.of(context).textTheme.overline.copyWith(
+                                color: Colors.white,
+                              ),
+                        ),
+                      )
                     : const SizedBox.shrink(),
               ),
             )

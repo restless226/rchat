@@ -1,7 +1,6 @@
 import 'package:chat/chat.dart';
-
-import '../../models/chat.dart';
-import '../../models/local_message.dart';
+import 'package:my_chat_app/models/chat.dart';
+import 'package:my_chat_app/models/local_message.dart';
 
 abstract class IDataSource {
   Future<void> addChat(Chat chat);

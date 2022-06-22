@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_chat_app/states_management/home/home_cubit.dart';
 import 'package:my_chat_app/states_management/home/home_state.dart';
+import 'package:my_chat_app/ui/pages/home/home_router.dart';
 import 'package:my_chat_app/ui/widgets/home/profile_image.dart';
 
 class ActiveUsers extends StatefulWidget {
-  const ActiveUsers({Key key}) : super(key: key);
+  final User me;
+  final IHomeRouter homeRouter;
+
+  const ActiveUsers(this.me, this.homeRouter, {Key key}) : super(key: key);
 
   @override
   _ActiveUsersState createState() => _ActiveUsersState();
@@ -30,6 +34,14 @@ class _ActiveUsersState extends State<ActiveUsers> {
   _buildList(List<User> users) => ListView.separated(
         padding: const EdgeInsets.only(top: 30, right: 16),
         itemBuilder: (BuildContext context, index) => GestureDetector(
+          onTap: () async {
+            await widget.homeRouter.onShowMessageThread(
+              context,
+              users[index],
+              widget.me,
+              chatId: users[index].id,
+            );
+          },
           child: _listItem(users[index]),
         ),
         separatorBuilder: (_, __) => const Divider(),

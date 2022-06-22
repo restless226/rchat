@@ -4,7 +4,7 @@
 // import 'package:my_chat_app/data/datasources/datasource_contract.dart';
 // import 'package:my_chat_app/models/chat.dart';
 // import 'package:my_chat_app/models/local_message.dart';
-// import 'package:my_chat_app/viewmodels/chat_view_models.dart';
+// import 'package:my_chat_app/viewmodels/chat_view_model.dart';
 //
 // class MockDatasource extends Mock implements IDataSource {}
 //
