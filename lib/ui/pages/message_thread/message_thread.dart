@@ -4,7 +4,6 @@ import 'package:chat/chat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_chat_app/colors.dart';
-import 'package:my_chat_app/models/chat.dart';
 import 'package:my_chat_app/models/local_message.dart';
 import 'package:my_chat_app/states_management/home/chats_cubit.dart';
 import 'package:my_chat_app/states_management/message/message_bloc.dart';
@@ -12,7 +11,12 @@ import 'package:my_chat_app/states_management/message_thread/message_thread_cubi
 import 'package:my_chat_app/states_management/receipt/receipt_bloc.dart';
 import 'package:my_chat_app/states_management/typing/typing_notification_bloc.dart';
 import 'package:my_chat_app/theme.dart';
+import 'package:my_chat_app/ui/widgets/message_thread/receiver_message.dart';
+import 'package:my_chat_app/ui/widgets/message_thread/sender_message.dart';
 import 'package:my_chat_app/ui/widgets/shared/header_status.dart';
+
+// ignore: implementation_imports
+import 'package:chat/src/models/typing_event_enums.dart';
 
 class MessageThread extends StatefulWidget {
   final User receiver;
@@ -89,6 +93,7 @@ class _MessageThreadState extends State<MessageThread> {
           return;
         }
         _stopTypingTimer?.cancel();
+        _dispatchTyping(Typing.stop);
       },
       child: TextFormField(
         controller: _textEditingController,
@@ -97,7 +102,7 @@ class _MessageThreadState extends State<MessageThread> {
         maxLines: null,
         style: Theme.of(context).textTheme.caption,
         cursorColor: kPrimary,
-        onChanged: null,
+        onChanged: _sendTypingNotification,
         decoration: InputDecoration(
           contentPadding:
               const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 8.0),
@@ -109,6 +114,88 @@ class _MessageThreadState extends State<MessageThread> {
         ),
       ),
     );
+  }
+
+  _buildListOfMessages() => ListView.builder(
+        padding: const EdgeInsets.only(top: 16.0, left: 16.0, bottom: 20),
+        itemBuilder: (BuildContext context, index) {
+          _sendReceipt(messages[index]);
+          if (receiver.id == messages[index].message.from) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: ReceiverMessage(
+                messages[index],
+                receiver.photoUrl,
+              ),
+            );
+          } else {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: SenderMessage(messages[index]),
+            );
+          }
+        },
+        itemCount: messages.length,
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        addAutomaticKeepAlives: true,
+      );
+
+  void _sendMessage() {
+    if (_textEditingController.text.trim().isEmpty) return;
+    final message = Message(
+        from: widget.me.id,
+        to: receiver.id,
+        timestamp: DateTime.now(),
+        contents: _textEditingController.text);
+    final sendMessageEvent = MessageEvent.onMessageSent(message);
+    widget.messageBloc.add(sendMessageEvent);
+    _textEditingController.clear();
+    _startTypingTimer?.cancel();
+    _stopTypingTimer?.cancel();
+    _dispatchTyping(Typing.stop);
+  }
+
+  void _sendReceipt(LocalMessage message) async {
+    if (message.receipt == ReceiptStatus.read) return;
+    final receipt = Receipt(
+      recipient: message.message.from,
+      messageId: message.id,
+      status: ReceiptStatus.read,
+      timestamp: DateTime.now(),
+    );
+    await context
+        .read<MessageThreadCubit>()
+        .viewModel
+        .updateMessageReceipt(receipt);
+  }
+
+  void _dispatchTyping(Typing event) {
+    final typing =
+        TypingEvent(from: widget.me.id, to: receiver.id, event: event);
+    widget.typingNotificationBloc
+        .add(TypingNotificationEvent.onTypingEventSent(typing));
+  }
+
+  void _sendTypingNotification(String text) {
+    if (text.trim().isEmpty || messages.isEmpty) return;
+
+    if (_startTypingTimer?.isActive ?? false) return;
+
+    if (_stopTypingTimer?.isActive ?? false) _stopTypingTimer?.cancel();
+
+    _dispatchTyping(Typing.start);
+
+    _startTypingTimer = Timer(
+        const Duration(seconds: 5), () {}); //send one event every 5 seconds
+
+    _stopTypingTimer =
+        Timer(const Duration(seconds: 6), () => _dispatchTyping(Typing.stop));
+  }
+
+  void _scrollToEnd() async {
+    _scrollController.animateTo(_scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 200), curve: Curves.easeInOut);
   }
 
   @override
@@ -150,12 +237,23 @@ class _MessageThreadState extends State<MessageThread> {
               },
             ),
             Expanded(
-              child: HeaderStatus(
-                username: receiver.username,
-                imageUrl: receiver.photoUrl,
-                online: receiver.active,
-                lastSeen: receiver.lastseen,
-                typing: false,
+              child: BlocBuilder<TypingNotificationBloc, TypingNotificationState>(
+                bloc: widget.typingNotificationBloc,
+                builder: (__, state) {
+                  bool typing;
+                  if (state is TypingNotificationReceivedSuccess &&
+                      state.event.event == Typing.start &&
+                      state.event.from == receiver.id) {
+                    typing = true;
+                  }
+                  return HeaderStatus(
+                    username: receiver.username,
+                    imageUrl: receiver.photoUrl,
+                    online: receiver.active,
+                    lastSeen: receiver.lastseen,
+                    typing: typing,
+                  );
+                },
               ),
             ),
           ],
@@ -169,46 +267,61 @@ class _MessageThreadState extends State<MessageThread> {
         child: Column(
           children: [
             Flexible(
-                flex: 6,
-                child: Container(
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                      color: isLightTheme(context) ? Colors.white : kAppBarDark,
-                      boxShadow: const [
-                        BoxShadow(
-                          offset: Offset(0, -3),
-                          blurRadius: 6.0,
-                          color: Colors.black12,
+              flex: 6,
+              child: BlocBuilder<MessageThreadCubit, List<LocalMessage>>(
+                builder: (__, messages) {
+                  this.messages = messages;
+                  if (this.messages.isEmpty) {
+                    return Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                          color: isLightTheme(context)
+                              ? Colors.white
+                              : kAppBarDark,
+                          boxShadow: const [
+                            BoxShadow(
+                              offset: Offset(0, -3),
+                              blurRadius: 6.0,
+                              color: Colors.black12,
+                            ),
+                          ]),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 20.0, vertical: 12.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(child: _buildMessageInput(context)),
+                            Padding(
+                              padding: const EdgeInsets.only(left: 12.0),
+                              child: Container(
+                                height: 45.0,
+                                width: 45.0,
+                                child: RawMaterialButton(
+                                    fillColor: kPrimary,
+                                    shape: const CircleBorder(),
+                                    elevation: 5.0,
+                                    child: const Icon(
+                                      Icons.send,
+                                      color: Colors.white,
+                                    ),
+                                    onPressed: () {
+                                      _sendMessage();
+                                    }),
+                              ),
+                            ),
+                          ],
                         ),
-                      ]),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20.0, vertical: 12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(child: _buildMessageInput(context)),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 12.0),
-                          child: Container(
-                            height: 45.0,
-                            width: 45.0,
-                            child: RawMaterialButton(
-                                fillColor: kPrimary,
-                                shape: const CircleBorder(),
-                                elevation: 5.0,
-                                child: const Icon(
-                                  Icons.send,
-                                  color: Colors.white,
-                                ),
-                                onPressed: () {}),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                )),
+                      ),
+                    );
+                  }
+                  WidgetsBinding.instance
+                      .addPostFrameCallback((_) => _scrollToEnd());
+                  return _buildListOfMessages();
+                },
+              ),
+            ),
           ],
         ),
       ),

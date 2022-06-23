@@ -56,6 +56,7 @@ class _ChatsState extends State<Chats> {
                   widget.user,
                   chatId: chats[index].id,
                 );
+                await context.read<ChatsCubit>().chats();
               },
               child: _chatItem(chats[index]),
             ),
