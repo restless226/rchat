@@ -6,6 +6,7 @@ class Message {
   final DateTime? timestamp;
   final String? contents;
   String? _messageId;
+  String? groupId;
 
   String? get id => _messageId;
 
@@ -14,6 +15,7 @@ class Message {
     @required this.to,
     @required this.timestamp,
     @required this.contents,
+    @required this.groupId,
   });
 
   toJson() => {
@@ -21,6 +23,7 @@ class Message {
     'to': this.to,
     'timestamp': this.timestamp,
     'contents': this.contents,
+    'group_id': this.groupId,
   };
 
   factory Message.fromJson(Map<String, dynamic> json) {
@@ -29,6 +32,7 @@ class Message {
       to: json['to'],
       timestamp: json['timestamp'],
       contents: json['contents'],
+      groupId: json['group_id'],
     );
     message._messageId = json['id'];
     return message;

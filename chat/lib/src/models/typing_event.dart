@@ -6,16 +6,19 @@ class TypingEvent {
   final String? to;
   final Typing? event;
   String? _typingId;
+  String? chatId;
 
   String? get id => _typingId;
 
   TypingEvent({
+    @required this.chatId,
     @required this.from,
     @required this.to,
     @required this.event,
   });
 
   Map<String, dynamic> toJson() => {
+    'chat_id': this.chatId,
     'from': this.from,
     'to': this.to,
     'event': event?.value(),
@@ -23,6 +26,7 @@ class TypingEvent {
 
   factory TypingEvent.fromJson(Map<String, dynamic> json) {
     TypingEvent _typingEvent = TypingEvent(
+      chatId: json['chat_id'],
       from: json['from'],
       to: json['to'],
       event: EnumParsing.fromString(json['event']),
