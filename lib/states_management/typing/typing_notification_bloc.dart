@@ -34,7 +34,7 @@ class TypingNotificationBloc
       yield TypingNotificationState.received(typingEvent.event);
     }
     if (typingEvent is TypingNotificationSent) {
-      await _typingNotification.send(typingEvent: typingEvent.event);
+      await _typingNotification.send(typingEvents: typingEvent.events);
       yield TypingNotificationState.sent();
     }
 

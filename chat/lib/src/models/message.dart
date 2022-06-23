@@ -15,7 +15,7 @@ class Message {
     @required this.to,
     @required this.timestamp,
     @required this.contents,
-    @required this.groupId,
+    this.groupId,
   });
 
   toJson() => {
