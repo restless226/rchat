@@ -3,7 +3,7 @@ import 'package:chat/src/models/user.dart';
 import 'package:flutter/foundation.dart';
 
 abstract class ITypingNotification {
-  Future<bool> send({@required TypingEvent? typingEvent, User to});
+  Future<bool> send({@required TypingEvent? typingEvent});
 
   Stream<TypingEvent> subscribe(User user, List<String> userIds);
 

@@ -49,4 +49,10 @@ class UserService implements IUserService {
     return _activeUsersList.map((item) => User.fromJson(item)).toList();
   }
 
+  @override
+  Future<User> fetch(String? id) async {
+    final user = await _rethinkdb.table('users').get(id).run(_connection);
+    return User.fromJson(user);
+  }
+
 }

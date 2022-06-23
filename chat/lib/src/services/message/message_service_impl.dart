@@ -31,7 +31,9 @@ class MessageService implements IMessageService {
 
   Message _extractMessageFromFeed(feedData) {
     var data = feedData['new_val'];
-    data['contents'] = _encryptionService?.decrypt(data['contents']);
+    if (_encryptionService != null) {
+      data['contents'] = _encryptionService?.decrypt(data['contents']);
+    }
     final Message _message = Message.fromJson(data);
     return _message;
   }
@@ -81,16 +83,19 @@ class MessageService implements IMessageService {
   }
 
   @override
-  Future<bool> send(Message message) async {
+  Future<Message> send(Message message) async {
     var data = message.toJson();
-    data['contents'] = _encryptionService?.encrypt(message.contents!);
+
+    if (_encryptionService != null) {
+      data['contents'] = _encryptionService?.encrypt(message.contents!);
+    }
 
     Map record = await _rethinkdb
         .table('messages')
-        .insert(data)
+        .insert(data, {'return_changes': true})
         .run(_connection);
 
-    return record['inserted'] == 1;
+    return Message.fromJson(record['changes'].first['new_val']);
   }
 
 }

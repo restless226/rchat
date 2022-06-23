@@ -1,5 +1,6 @@
-import '../../models/chat.dart';
-import '../../models/local_message.dart';
+import 'package:chat/chat.dart';
+import 'package:my_chat_app/models/chat.dart';
+import 'package:my_chat_app/models/local_message.dart';
 
 abstract class IDataSource {
   Future<void> addChat(Chat chat);
@@ -15,4 +16,6 @@ abstract class IDataSource {
   Future<List<LocalMessage>> findMessages(String chatId);
 
   Future<void> deleteChat(String chatId);
+
+  Future<void> updateMessageReceipt(String messageId, ReceiptStatus status);
 }

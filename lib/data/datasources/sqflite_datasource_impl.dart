@@ -1,3 +1,4 @@
+import 'package:chat/src/models/receipt.dart';
 import 'package:my_chat_app/data/datasources/datasource_contract.dart';
 import 'package:my_chat_app/models/chat.dart';
 import 'package:my_chat_app/models/local_message.dart';
@@ -11,12 +12,25 @@ class SqfliteDataSource implements IDataSource {
 
   @override
   Future<void> addChat(Chat chat) async {
-    await _database.insert('chats', chat.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    return await _database.transaction((txn) async {
+      await txn.insert(
+        'chats',
+        chat.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.rollback,
+      );
+    });
   }
 
   @override
   Future<void> addMessage(LocalMessage message) async {
-    await _database.insert('messages', message.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await _database.transaction((txn) async {
+      await txn.insert('messages', message.toMap(),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      await txn.update(
+          'chats', {'updated_at': message.message.timestamp.toString()},
+          where: 'id = ?', whereArgs: [message.chatId]);
+    });
   }
 
   /// we want to delete a particular chat from "chats" table and also
@@ -45,7 +59,8 @@ class SqfliteDataSource implements IDataSource {
         AS latest_messages
         INNER JOIN messages
         ON messages.chat_id = latest_messages.chat_id
-        AND messages.created_at = latest_messages.created_at'''
+        AND messages.created_at = latest_messages.created_at
+        ORDER BY messages.created_at DESC'''
       );
 
       if (chatsWithLatestMessages.isEmpty) return [];
@@ -69,24 +84,6 @@ class SqfliteDataSource implements IDataSource {
         chat.mostRecent = LocalMessage.fromMap(row);
         return chat;
       }).toList();
-
-      // return [];
-
-      // return chatsWithLatestMessages.map<Chat>((row) {
-      //   final int? unread = int.tryParse(
-      //       chatsWithUnreadMessages
-      //       .firstWhere(
-      //             (ele) => row['chat_id'] ==  ele['chat_id'],
-      //             orElse: () => {'unread': 0}
-      //       )['unread']
-      //   );
-      //
-      //   final chat = Chat.fromMap(row);
-      //   chat.unread = unread;
-      //   chat.mostRecent = LocalMessage.fromMap(row);
-      //
-      //   return chat;
-      // }).toList();
     });
   }
 
@@ -144,6 +141,16 @@ class SqfliteDataSource implements IDataSource {
         where: 'id = ?',
         whereArgs: [message.message?.id],
         conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  @override
+  Future<void> updateMessageReceipt(String messageId, ReceiptStatus status) {
+    return _database.transaction((txn) async {
+      await txn.update('messages', {'receipt': status.value()},
+          where: 'id = ?',
+          whereArgs: [messageId],
+          conflictAlgorithm: ConflictAlgorithm.replace);
+    });
   }
 
 }
