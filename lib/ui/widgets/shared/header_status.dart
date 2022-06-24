@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'package:my_chat_app/ui/widgets/home/profile_image.dart';
 import 'package:flutter/material.dart';
 
@@ -6,21 +5,16 @@ class HeaderStatus extends StatelessWidget {
   final String username;
   final String imageUrl;
   final bool online;
-  final DateTime lastSeen;
-  final bool typing;
+  final String description;
+  final String typing;
 
-  const HeaderStatus({
-    Key key,
-    @required this.username,
-    @required this.imageUrl,
-    @required this.online,
-    this.lastSeen,
-    @required this.typing,
-  }) : super(key: key);
+  const HeaderStatus(this.username, this.imageUrl, this.online,
+      {Key key, this.description, this.typing})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.maxFinite,
       child: Row(
         children: [
@@ -35,23 +29,22 @@ class HeaderStatus extends StatelessWidget {
                 padding: const EdgeInsets.only(left: 12.0),
                 child: Text(
                   username.trim(),
-                  style: Theme.of(context).textTheme.caption.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: Theme.of(context)
+                      .textTheme
+                      .caption
+                      .copyWith(fontSize: 14.0)
+                      .copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.only(left: 12.0),
                 child: typing == null
                     ? Text(
-                        online
-                            ? 'online'
-                            : 'last seen ${DateFormat.yMd().add_jm().format(lastSeen)}',
+                        online ? 'online' : description,
                         style: Theme.of(context).textTheme.caption,
                       )
                     : Text(
-                        'typing...',
+                        typing,
                         style: Theme.of(context)
                             .textTheme
                             .caption

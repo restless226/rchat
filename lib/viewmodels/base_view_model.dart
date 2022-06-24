@@ -13,7 +13,7 @@ abstract class BaseViewModel {
     return _chat != null;
   }
 
-  Future<void> _createNewChat(Chat chat) async {
+  Future<void> createNewChat(Chat chat) async {
     await _dataSource.addChat(chat);
   }
 
@@ -23,7 +23,7 @@ abstract class BaseViewModel {
       final chat = Chat(message.chatId, ChatType.individual, membersId: [
         {message.chatId: ""}
       ]);
-      await _createNewChat(chat);
+      await createNewChat(chat);
     }
     await _dataSource.addMessage(message);
   }

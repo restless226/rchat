@@ -8,8 +8,10 @@ import 'package:my_chat_app/data/factories/db_factory.dart';
 import 'package:my_chat_app/data/services/image_uploader.dart';
 import 'package:my_chat_app/models/chat.dart';
 import 'package:my_chat_app/states_management/home/chats_cubit.dart';
+import 'package:my_chat_app/states_management/home/group_cubit.dart';
 import 'package:my_chat_app/states_management/home/home_cubit.dart';
 import 'package:my_chat_app/states_management/message/message_bloc.dart';
+import 'package:my_chat_app/states_management/message_group/message_group_bloc.dart';
 import 'package:my_chat_app/states_management/message_thread/message_thread_cubit.dart';
 import 'package:my_chat_app/states_management/onboarding/onboarding_cubit.dart';
 import 'package:my_chat_app/states_management/onboarding/profile_image_cubit.dart';
@@ -20,6 +22,7 @@ import 'package:my_chat_app/ui/pages/home/home_router.dart';
 import 'package:my_chat_app/ui/pages/message_thread/message_thread.dart';
 import 'package:my_chat_app/ui/pages/onboarding/onboarding.dart';
 import 'package:my_chat_app/ui/pages/onboarding/onboarding_router.dart';
+import 'package:my_chat_app/ui/widgets/home/create_group.dart';
 import 'package:my_chat_app/viewmodels/chat_view_model.dart';
 import 'package:my_chat_app/viewmodels/chats_view_model.dart';
 import 'package:rethinkdb_dart/rethinkdb_dart.dart';
@@ -38,6 +41,10 @@ class CompositionRoot {
   static TypingNotificationBloc _typingNotificationBloc;
   static ITypingNotification _typingNotification;
   static ChatsCubit _chatsCubit;
+  static IGroupService _groupService;
+  static MessageGroupBloc _messageGroupBloc;
+  static IHomeRouter _homeRouter;
+  static ChatsViewModel _chatsViewModel;
 
   static configure() async {
     _rethinkdb = Rethinkdb();
@@ -52,8 +59,14 @@ class CompositionRoot {
     _localCache = LocalCache(_sharedPreferences);
     _messageBloc = MessageBloc(_messageService);
     _typingNotificationBloc = TypingNotificationBloc(_typingNotification);
-    final chatsViewModel = ChatsViewModel(_dataSource, _userService);
-    _chatsCubit = ChatsCubit(chatsViewModel);
+    _groupService = MessageGroupService(_rethinkdb, _connection);
+    _messageGroupBloc = MessageGroupBloc(_groupService);
+    _homeRouter = HomeRouter(
+      showMessageThread: composeMessageThreadUI,
+      showCreateGroup: composeGroupUI,
+    );
+    _chatsViewModel = ChatsViewModel(_dataSource, _userService);
+    _chatsCubit = ChatsCubit(_chatsViewModel);
   }
 
   static Widget composeOnboardingUI() {
@@ -64,7 +77,7 @@ class CompositionRoot {
         OnboardingCubit(_userService, _imageUploader, _localCache);
     ProfileImageCubit imageCubit = ProfileImageCubit();
     IOnboardingRouter onboardingRouter =
-        OnboardingRouter(onSessionConnected: composeHomeUi);
+        OnboardingRouter(onSessionConnected: composeHomeUI);
 
     return MultiBlocProvider(
       providers: [
@@ -77,31 +90,27 @@ class CompositionRoot {
     );
   }
 
-  static Widget composeHomeUi(User me) {
+  static Widget composeHomeUI(User me) {
     HomeCubit homeCubit = HomeCubit(_userService, _localCache);
-    IHomeRouter homeRouter = HomeRouter(
-      showMessageThread: composeMessageThreadUi,
-    );
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (BuildContext context) => homeCubit),
-        BlocProvider(create: (BuildContext context) => _messageBloc),
-        BlocProvider(create: (BuildContext context) => _typingNotificationBloc),
-        BlocProvider(create: (BuildContext context) => _chatsCubit),
-      ],
-      child: Home(me, homeRouter),
-    );
+
+    return MultiBlocProvider(providers: [
+      BlocProvider(create: (BuildContext context) => homeCubit),
+      BlocProvider(create: (BuildContext context) => _messageBloc),
+      BlocProvider(create: (BuildContext context) => _chatsCubit),
+      BlocProvider(create: (BuildContext context) => _typingNotificationBloc),
+      BlocProvider(create: (BuildContext context) => _messageGroupBloc)
+    ], child: Home(_chatsViewModel, _homeRouter, me));
   }
 
   static Widget start() {
     final user = _localCache.fetch('USER');
     return user.isEmpty
         ? composeOnboardingUI()
-        : composeHomeUi(User.fromJson(user));
+        : composeHomeUI(User.fromJson(user));
   }
 
-  static Widget composeMessageThreadUi(User receiver, User me,
-      {String chatId}) {
+  static Widget composeMessageThreadUI(
+      List<User> receivers, User me, Chat chat) {
     ChatViewModel viewModel = ChatViewModel(_dataSource);
     MessageThreadCubit messageThreadCubit = MessageThreadCubit(viewModel);
     IReceiptService receiptService = ReceiptService(_connection, _rethinkdb);
@@ -113,13 +122,22 @@ class CompositionRoot {
         BlocProvider(create: (BuildContext context) => receiptBloc),
       ],
       child: MessageThread(
-        receiver,
+        receivers,
         me,
-        null,
+        chat,
         _messageBloc,
         _typingNotificationBloc,
         _chatsCubit,
       ),
     );
+  }
+
+  static Widget composeGroupUI(List<User> activeUsers, User me) {
+    GroupCubit groupCubit = GroupCubit();
+    MessageGroupBloc messageGroupBloc = MessageGroupBloc(_groupService);
+    return MultiBlocProvider(providers: [
+      BlocProvider(create: (BuildContext context) => groupCubit),
+      BlocProvider(create: (BuildContext context) => messageGroupBloc),
+    ], child: CreateGroup(activeUsers, me, _chatsCubit, _homeRouter));
   }
 }
