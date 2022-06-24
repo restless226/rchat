@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:chat/chat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:my_chat_app/colors.dart';
+import 'package:my_chat_app/models/chat.dart';
 import 'package:my_chat_app/models/local_message.dart';
 import 'package:my_chat_app/states_management/home/chats_cubit.dart';
 import 'package:my_chat_app/states_management/message/message_bloc.dart';
@@ -19,14 +21,14 @@ import 'package:my_chat_app/ui/widgets/shared/header_status.dart';
 import 'package:chat/src/models/typing_event_enums.dart';
 
 class MessageThread extends StatefulWidget {
-  final User receiver;
+  final List<User> receivers;
   final User me;
-  final String chatId;
+  final Chat chat;
   final MessageBloc messageBloc;
   final TypingNotificationBloc typingNotificationBloc;
   final ChatsCubit chatsCubit;
 
-  const MessageThread(this.receiver, this.me, this.chatId, this.messageBloc,
+  const MessageThread(this.receivers, this.me, this.chat, this.messageBloc,
       this.typingNotificationBloc, this.chatsCubit,
       {Key key})
       : super(key: key);
@@ -40,7 +42,7 @@ class _MessageThreadState extends State<MessageThread> {
 
   final TextEditingController _textEditingController = TextEditingController();
   String chatId = '';
-  User receiver;
+  List<User> receivers;
   StreamSubscription _subscription;
   List<LocalMessage> messages = [];
   Timer _startTypingTimer;
@@ -119,13 +121,24 @@ class _MessageThreadState extends State<MessageThread> {
   _buildListOfMessages() => ListView.builder(
         padding: const EdgeInsets.only(top: 16.0, left: 16.0, bottom: 20),
         itemBuilder: (BuildContext context, index) {
-          _sendReceipt(messages[index]);
-          if (receiver.id == messages[index].message.from) {
+          if (receivers.any((e) => e.id == messages[index].message.from)) {
+            _sendReceipt(messages[index]);
+            final receiver = receivers
+                .firstWhere((e) => e.id == messages[index].message.from);
+
+            final String color = widget.chat.membersId
+                ?.firstWhere((e) => e.containsKey(receiver.id))
+                ?.values
+                ?.first;
             return Padding(
               padding: const EdgeInsets.only(bottom: 8.0),
               child: ReceiverMessage(
                 messages[index],
-                receiver.photoUrl,
+                receiver,
+                widget.chat.type,
+                color: ChatType.group == widget.chat.type
+                    ? Color(int.tryParse(color))
+                    : null,
               ),
             );
           } else {
@@ -143,16 +156,21 @@ class _MessageThreadState extends State<MessageThread> {
 
   void _sendMessage() {
     if (_textEditingController.text.trim().isEmpty) return;
-    final message = Message(
-        from: widget.me.id,
-        to: receiver.id,
-        timestamp: DateTime.now(),
-        contents: _textEditingController.text);
-    final sendMessageEvent = MessageEvent.onMessageSent(message);
+
+    final messages = receivers
+        .map((e) => Message(
+            groupId: widget.chat.type == ChatType.group ? widget.chat.id : null,
+            from: widget.me.id,
+            to: e.id,
+            timestamp: DateTime.now(),
+            contents: _textEditingController.text))
+        .toList();
+    final sendMessageEvent = MessageEvent.onMessageSent(messages);
     widget.messageBloc.add(sendMessageEvent);
     _textEditingController.clear();
     _startTypingTimer?.cancel();
     _stopTypingTimer?.cancel();
+
     _dispatchTyping(Typing.stop);
   }
 
@@ -164,6 +182,9 @@ class _MessageThreadState extends State<MessageThread> {
       status: ReceiptStatus.read,
       timestamp: DateTime.now(),
     );
+    if (widget.chat.type == ChatType.individual) {
+      context.read<ReceiptBloc>().add(ReceiptEvent.onReceiptSent(receipt));
+    }
     await context
         .read<MessageThreadCubit>()
         .viewModel
@@ -171,10 +192,14 @@ class _MessageThreadState extends State<MessageThread> {
   }
 
   void _dispatchTyping(Typing event) {
-    final typing =
-        TypingEvent(from: widget.me.id, to: receiver.id, event: event);
+    dynamic chatId;
+    chatId = widget.chat.type == ChatType.group ? chatId : widget.me.id;
+    final typingEvents = receivers
+        .map((e) => TypingEvent(
+            chatId: chatId, from: widget.me.id, to: e.id, event: event))
+        .toList();
     widget.typingNotificationBloc
-        .add(TypingNotificationEvent.onTypingEventSent(typing));
+        .add(TypingNotificationEvent.onTypingEventSent(typingEvents));
   }
 
   void _sendTypingNotification(String text) {
@@ -201,14 +226,15 @@ class _MessageThreadState extends State<MessageThread> {
   @override
   void initState() {
     super.initState();
-    chatId = widget.chatId;
-    receiver = widget.receiver;
+    chatId = widget.chat.id;
+    receivers = widget.receivers;
+    receivers.removeWhere((element) => element.id == widget.me.id);
     _updateOnMessageReceived();
     _updateOnReceiptReceived();
     context.read<ReceiptBloc>().add(ReceiptEvent.onSubscribed(widget.me));
     widget.typingNotificationBloc.add(TypingNotificationEvent.onSubscribed(
       widget.me,
-      usersWithChat: [receiver.id],
+      usersWithChat: receivers.map((e) => e.id).toList(),
     ));
   }
 
@@ -237,20 +263,35 @@ class _MessageThreadState extends State<MessageThread> {
               },
             ),
             Expanded(
-              child: BlocBuilder<TypingNotificationBloc, TypingNotificationState>(
+              child:
+                  BlocBuilder<TypingNotificationBloc, TypingNotificationState>(
                 bloc: widget.typingNotificationBloc,
                 builder: (__, state) {
-                  bool typing;
+                  String typing;
                   if (state is TypingNotificationReceivedSuccess &&
                       state.event.event == Typing.start &&
-                      state.event.from == receiver.id) {
-                    typing = true;
+                      state.event.chatId == chatId) {
+                    if (widget.chat.type == ChatType.individual) {
+                      typing = 'typing..';
+                    } else {
+                      typing =
+                          '${receivers.firstWhere((e) => e.id == state.event.from).username} is typing..';
+                    }
                   }
                   return HeaderStatus(
-                    username: receiver.username,
-                    imageUrl: receiver.photoUrl,
-                    online: receiver.active,
-                    lastSeen: receiver.lastseen,
+                    widget.chat.name ?? receivers.first.username,
+                    widget.chat.type == ChatType.individual
+                        ? receivers.first.photoUrl
+                        : null,
+                    widget.chat.type == ChatType.individual
+                        ? receivers.first.active
+                        : false,
+                    description: widget.chat.type == ChatType.individual
+                        ? 'last seen ${DateFormat.yMd().add_jm().format(receivers.first.lastseen)}'
+                        : receivers
+                            .fold<String>('', (p, e) => p + ', ' + e.username)
+                            .replaceFirst(',', '')
+                            .trim(),
                     typing: typing,
                   );
                 },
@@ -269,57 +310,79 @@ class _MessageThreadState extends State<MessageThread> {
             Flexible(
               flex: 6,
               child: BlocBuilder<MessageThreadCubit, List<LocalMessage>>(
-                builder: (__, messages) {
-                  this.messages = messages;
-                  if (this.messages.isEmpty) {
-                    return Container(
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                          color: isLightTheme(context)
-                              ? Colors.white
-                              : kAppBarDark,
-                          boxShadow: const [
-                            BoxShadow(
-                              offset: Offset(0, -3),
-                              blurRadius: 6.0,
-                              color: Colors.black12,
+                  builder: (__, messages) {
+                this.messages = messages;
+                if (this.messages.isEmpty) {
+                  return Container(
+                    alignment: Alignment.topCenter,
+                    padding: const EdgeInsets.only(top: 30),
+                    color: Colors.transparent,
+                    child: widget.chat.type == ChatType.group
+                        ? DecoratedBox(
+                            decoration: BoxDecoration(
+                                color: kPrimary.withOpacity(0.9),
+                                borderRadius: BorderRadius.circular(20)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Text('Group created',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .caption
+                                      .copyWith(color: Colors.white)),
                             ),
-                          ]),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20.0, vertical: 12.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(child: _buildMessageInput(context)),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 12.0),
-                              child: Container(
-                                height: 45.0,
-                                width: 45.0,
-                                child: RawMaterialButton(
-                                    fillColor: kPrimary,
-                                    shape: const CircleBorder(),
-                                    elevation: 5.0,
-                                    child: const Icon(
-                                      Icons.send,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () {
-                                      _sendMessage();
-                                    }),
+                          )
+                        : Container(),
+                  );
+                }
+                WidgetsBinding.instance
+                    .addPostFrameCallback((_) => _scrollToEnd());
+                return _buildListOfMessages();
+              }),
+            ),
+            Expanded(
+              child: Container(
+                height: 100,
+                decoration: BoxDecoration(
+                  color: isLightTheme(context) ? Colors.white : kAppBarDark,
+                  boxShadow: const [
+                    BoxShadow(
+                      offset: Offset(0, -3),
+                      blurRadius: 6.0,
+                      color: Colors.black12,
+                    ),
+                  ],
+                ),
+                alignment: Alignment.topCenter,
+                width: double.maxFinite,
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                      left: 20.0, top: 12.0, right: 20.0, bottom: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(child: _buildMessageInput(context)),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12.0),
+                        child: SizedBox(
+                          width: 45.0,
+                          height: 45.0,
+                          child: RawMaterialButton(
+                              fillColor: kPrimary,
+                              shape: const CircleBorder(),
+                              elevation: 5.0,
+                              child: const Icon(
+                                Icons.send,
+                                color: Colors.white,
                               ),
-                            ),
-                          ],
+                              onPressed: () {
+                                _sendMessage();
+                              }),
                         ),
-                      ),
-                    );
-                  }
-                  WidgetsBinding.instance
-                      .addPostFrameCallback((_) => _scrollToEnd());
-                  return _buildListOfMessages();
-                },
+                      )
+                    ],
+                  ),
+                ),
               ),
             ),
           ],

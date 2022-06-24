@@ -22,8 +22,9 @@ class ChatViewModel extends BaseViewModel {
   }
 
   Future<void> sentMessage(Message message) async {
+    final chatId = message.groupId ?? message.from;
     LocalMessage _localMessage = LocalMessage(
-      chatId: message.to,
+      chatId: chatId,
       message: message,
       receipt: ReceiptStatus.sent,
     );
@@ -33,8 +34,9 @@ class ChatViewModel extends BaseViewModel {
   }
 
   Future<void> receivedMessage(Message message) async {
+    final chatId = message.groupId ?? message.from;
     LocalMessage _localMessage = LocalMessage(
-      chatId: message.from,
+      chatId: chatId,
       message: message,
       receipt: ReceiptStatus.delivered,
     );

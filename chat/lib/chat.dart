@@ -4,6 +4,10 @@ export 'package:chat/src/models/message.dart';
 export 'package:chat/src/models/receipt.dart';
 export 'package:chat/src/models/user.dart';
 export 'package:chat/src/models/typing_event.dart';
+export 'package:chat/src/models/message_group.dart';
+
+export 'package:chat/src/services/group/group_service_contract.dart';
+export 'package:chat/src/services/group/group_service_impl.dart';
 
 export 'package:chat/src/services/encryption/encryption_service_contract.dart';
 export 'package:chat/src/services/encryption/encryption_service_impl.dart';

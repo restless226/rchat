@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../../models/user.dart';
 
 abstract class IMessageService {
-  Future<Message> send(Message message);   // return true if message is sent
+  Future<Message> send(List<Message> messages);   // return true if message is sent
 
   Stream<Message> messages({@required User activeUser});   // get messages from a particular user
 

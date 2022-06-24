@@ -13,15 +13,17 @@ abstract class BaseViewModel {
     return _chat != null;
   }
 
-  Future<void> _createNewChat(String chatId) async {
-    final Chat _chat = Chat(chatId);
-    await _dataSource.addChat(_chat);
+  Future<void> createNewChat(Chat chat) async {
+    await _dataSource.addChat(chat);
   }
 
   @protected
   Future<void> addMessage(LocalMessage message) async {
-    if (!(await _isExistingChat(message.chatId))) {
-      await _createNewChat(message.chatId);
+    if (!await _isExistingChat(message.chatId)) {
+      final chat = Chat(message.chatId, ChatType.individual, membersId: [
+        {message.chatId: ""}
+      ]);
+      await createNewChat(chat);
     }
     await _dataSource.addMessage(message);
   }

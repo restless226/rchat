@@ -41,12 +41,13 @@ void main() {
 
   test('sent typing notification successfully', () async {
     TypingEvent _typingEvent = TypingEvent(
+      chatId: '123',
       from: _user1.id,
       to: _user2.id,
       event: Typing.start,
     );
 
-    final result = await _typingNotificationService?.send(typingEvent: _typingEvent);
+    final result = await _typingNotificationService?.send(typingEvents: [_typingEvent]);
     expect(result, true);
   });
 
@@ -58,18 +59,20 @@ void main() {
     );
 
     TypingEvent _startEvent = TypingEvent(
+      chatId: '123',
         from: _user2.id,
         to: _user1.id,
         event: Typing.start,
     );
 
     TypingEvent _stopEvent = TypingEvent(
+      chatId: '123',
       from: _user2.id,
       to: _user1.id,
       event: Typing.stop,
     );
 
-    await _typingNotificationService?.send(typingEvent: _startEvent);
-    await _typingNotificationService?.send(typingEvent: _stopEvent);
+    await _typingNotificationService?.send(typingEvents: [_startEvent]);
+    await _typingNotificationService?.send(typingEvents: [_stopEvent]);
   });
 }

@@ -1,6 +1,7 @@
 import 'package:chat/chat.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_chat_app/models/chat.dart';
 import 'package:my_chat_app/states_management/home/home_cubit.dart';
 import 'package:my_chat_app/states_management/home/home_state.dart';
 import 'package:my_chat_app/ui/pages/home/home_router.dart';
@@ -37,9 +38,9 @@ class _ActiveUsersState extends State<ActiveUsers> {
           onTap: () async {
             await widget.homeRouter.onShowMessageThread(
               context,
-              users[index],
+              [users[index]],
               widget.me,
-              chatId: users[index].id,
+              Chat(users[index].id, ChatType.individual),
             );
           },
           child: _listItem(users[index]),

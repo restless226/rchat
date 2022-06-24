@@ -10,12 +10,12 @@ class LocalDatabaseFactory {
     return database;
   }
 
-  void populateDb(Database db, int version) async {
+  Future<void> populateDb(Database db, int version) async {
     await _createChatTable(db);
     await _createMessagesTable(db);
   }
 
-  _createChatTable(Database db) async {
+  Future<void> _createChatTable(Database db) async {
     await db
         .execute(
           """CREATE TABLE chats(
@@ -31,7 +31,7 @@ class LocalDatabaseFactory {
         .catchError((e) => print('error creating chats table: $e'));
   }
 
-  _createMessagesTable(Database db) async {
+  void _createMessagesTable(Database db) async {
     await db
         .execute("""
           CREATE TABLE messages(

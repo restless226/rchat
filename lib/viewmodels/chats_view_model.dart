@@ -13,18 +13,21 @@ class ChatsViewModel extends BaseViewModel {
   Future<List<Chat>> getChats() async {
     final chats = await _dataSource.findAllChats();
     await Future.forEach(chats, (Chat chat) async {
-      final user = await _userService.fetch(chat.id);
-      chat.from = user;
+      final userIds = chat.membersId.map<String>((e) => e.keys.first).toList();
+      final users = await _userService.fetch(userIds);
+      chat.members = users;
     });
     return chats;
   }
 
   Future<void> receiveMessages(Message message) async {
+    final chatId = message.groupId ?? message.from;
+
     /// creating _localMessage object for received message object
     LocalMessage _localMessage = LocalMessage(
-        chatId: message.from,
-        message: message,
-        receipt: ReceiptStatus.delivered
+      chatId: chatId,
+      message: message,
+      receipt: ReceiptStatus.delivered,
     );
     await addMessage(_localMessage);
   }

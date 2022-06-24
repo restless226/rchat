@@ -5,7 +5,6 @@ import 'package:my_chat_app/models/local_message.dart';
 import 'package:sqflite/sqflite.dart';
 
 class SqfliteDataSource implements IDataSource {
-
   final Database _database;
 
   const SqfliteDataSource(this._database);
@@ -24,8 +23,10 @@ class SqfliteDataSource implements IDataSource {
   @override
   Future<void> addMessage(LocalMessage message) async {
     await _database.transaction((txn) async {
-      await txn.insert('messages', message.toMap(),
-          conflictAlgorithm: ConflictAlgorithm.replace,
+      await txn.insert(
+        'messages',
+        message.toMap(),
+        conflictAlgorithm: ConflictAlgorithm.replace,
       );
       await txn.update(
           'chats', {'updated_at': message.message.timestamp.toString()},
@@ -44,13 +45,12 @@ class SqfliteDataSource implements IDataSource {
     await batch.commit(noResult: true);
   }
 
-  @override
-  Future<List<Chat>> findAllChats() {
+  Future<List<Chat>> findAllChatsOld() {
     /// all queries are run on same transaction object
     /// we don not want to use different txn object for each query as it can cause "deadlock"
     return _database.transaction((txn) async {
-
-      final chatsWithLatestMessages = await txn.rawQuery(''' SELECT messages.* FROM
+      final chatsWithLatestMessages =
+          await txn.rawQuery(''' SELECT messages.* FROM
         (SELECT 
           chat_id, MAX(created_at) AS created_at
           FROM messages
@@ -60,8 +60,7 @@ class SqfliteDataSource implements IDataSource {
         INNER JOIN messages
         ON messages.chat_id = latest_messages.chat_id
         AND messages.created_at = latest_messages.created_at
-        ORDER BY messages.created_at DESC'''
-      );
+        ORDER BY messages.created_at DESC''');
 
       if (chatsWithLatestMessages.isEmpty) return [];
 
@@ -71,14 +70,15 @@ class SqfliteDataSource implements IDataSource {
         FROM messages
         WHERE receipt = ?
         GROUP BY chat_id
-        ''', ['delivered']
-      );
+        ''', ['delivered']);
 
       return chatsWithLatestMessages.map<Chat>((row) {
         final Object unread = chatsWithUnreadMessages.firstWhere(
             (ele) => row['chat_id'] == ele['chat_id'],
             orElse: () => {'unread': 0})['unread'];
-        final chat = Chat.fromMap({'id': row['chat_id'], });
+        final chat = Chat.fromMap({
+          'id': row['chat_id'],
+        });
         print("unread = " + unread.toString());
         chat.unread = unread as int;
         chat.mostRecent = LocalMessage.fromMap(row);
@@ -88,37 +88,58 @@ class SqfliteDataSource implements IDataSource {
   }
 
   @override
-  Future<Chat> findChat(String chatId) async {
+  Future<List<Chat>> findAllChats() {
     return _database.transaction((txn) async {
-        final listOfChatMaps = await txn.query(
-            'chats',
-            where: 'id = ?',
-            whereArgs: [chatId]
-        );
+      final listOfChatMaps =
+          await txn.query('chats', orderBy: 'updated_at DESC');
 
-        if (listOfChatMaps.isEmpty) return null;
+      if (listOfChatMaps.isEmpty) return [];
 
-        final unread = Sqflite.firstIntValue(
-          await txn.rawQuery(
-              'SELECT COUNT(*) FROM MESSAGES WHERE chat_id = ? AND receipt = ?',
-              [chatId, 'delivered']
-          )
-        );
+      return await Future.wait(listOfChatMaps.map<Future<Chat>>((row) async {
+        final unread = Sqflite.firstIntValue(await txn.rawQuery(
+            'SELECT COUNT(*) FROM MESSAGES WHERE chat_id = ? AND receipt = ?',
+            [row['id'], 'delivered']));
 
         final mostRecentMessage = await txn.query('messages',
             where: 'chat_id = ?',
-            whereArgs: [chatId],
+            whereArgs: [row['id']],
             orderBy: 'created_at DESC',
-            limit: 1
-        );
-
-        final chat = Chat.fromMap(listOfChatMaps.first);
+            limit: 1);
+        final chat = Chat.fromMap(row);
         chat.unread = unread;
         if (mostRecentMessage.isNotEmpty) {
           chat.mostRecent = LocalMessage.fromMap(mostRecentMessage.first);
         }
-
         return chat;
+      }));
+    });
+  }
+
+  @override
+  Future<Chat> findChat(String chatId) async {
+    return _database.transaction((txn) async {
+      final listOfChatMaps =
+          await txn.query('chats', where: 'id = ?', whereArgs: [chatId]);
+
+      if (listOfChatMaps.isEmpty) return null;
+
+      final unread = Sqflite.firstIntValue(await txn.rawQuery(
+          'SELECT COUNT(*) FROM MESSAGES WHERE chat_id = ? AND receipt = ?',
+          [chatId, 'delivered']));
+
+      final mostRecentMessage = await txn.query('messages',
+          where: 'chat_id = ?',
+          whereArgs: [chatId],
+          orderBy: 'created_at DESC',
+          limit: 1);
+
+      final chat = Chat.fromMap(listOfChatMaps.first);
+      chat.unread = unread;
+      if (mostRecentMessage.isNotEmpty) {
+        chat.mostRecent = LocalMessage.fromMap(mostRecentMessage.first);
+      }
+
+      return chat;
     });
   }
 
@@ -152,5 +173,4 @@ class SqfliteDataSource implements IDataSource {
           conflictAlgorithm: ConflictAlgorithm.replace);
     });
   }
-
 }

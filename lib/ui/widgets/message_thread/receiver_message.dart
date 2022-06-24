@@ -1,15 +1,21 @@
+import 'package:chat/chat.dart';
 import 'package:my_chat_app/colors.dart';
+import 'package:my_chat_app/models/chat.dart';
 import 'package:my_chat_app/models/local_message.dart';
 import 'package:my_chat_app/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 class ReceiverMessage extends StatelessWidget {
+  final User _user;
   final LocalMessage _message;
-  final String _photoUrl;
+  final ChatType type;
+  final Color color;
 
-  const ReceiverMessage(this._message, this._photoUrl, {Key key})
-      : super(key: key);
+  const ReceiverMessage(this._message, this._user, this.type,
+      {Key key, Color color})
+      : this.color = color,
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +29,21 @@ class ReceiverMessage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                if (type == ChatType.group)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 22.0, bottom: 2.0),
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        _user.username,
+                        softWrap: true,
+                        style: Theme.of(context).textTheme.caption.copyWith(
+                            color: color,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10),
+                      ),
+                    ),
+                  ),
                 DecoratedBox(
                   decoration: BoxDecoration(
                     color: isLightTheme(context) ? kBubbleLight : kBubbleDark,
@@ -32,14 +53,12 @@ class ReceiverMessage extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 24.0, vertical: 12.0),
-                    child: Text(
-                      _message.message.contents.trim(),
-                      softWrap: true,
-                      style: Theme.of(context)
-                          .textTheme
-                          .caption
-                          .copyWith(height: 1.2),
-                    ),
+                    child: Text(_message.message.contents.trim(),
+                        softWrap: true,
+                        style: Theme.of(context)
+                            .textTheme
+                            .caption
+                            .copyWith(height: 1.2)),
                   ),
                 ),
                 Padding(
@@ -64,12 +83,8 @@ class ReceiverMessage extends StatelessWidget {
             radius: 18,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(20.0),
-              child: Image.network(
-                _photoUrl,
-                width: 30,
-                height: 30,
-                fit: BoxFit.fill,
-              ),
+              child: Image.network(_user.photoUrl,
+                  width: 30, height: 30, fit: BoxFit.fill),
             ),
           ),
         ],

@@ -5,7 +5,7 @@ abstract class MessageEvent extends Equatable {
 
   factory MessageEvent.onSubscribed(User user) => Subscribed(user);
 
-  factory MessageEvent.onMessageSent(Message message) => MessageSent(message);
+  factory MessageEvent.onMessageSent(List<Message> messages) => MessageSent(messages);
 
   @override
   List<Object> get props => [];
@@ -21,12 +21,12 @@ class Subscribed extends MessageEvent {
 }
 
 class MessageSent extends MessageEvent {
-  final Message message;
+  final List<Message> messages;
 
-  const MessageSent(this.message);
+  const MessageSent(this.messages);
 
   @override
-  List<Object> get props => [message];
+  List<Object> get props => [messages];
 }
 
 /// this class is useful for server purposes only not for client

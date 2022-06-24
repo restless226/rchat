@@ -7,8 +7,8 @@ abstract class TypingNotificationEvent extends Equatable {
           {List<String> usersWithChat}) =>
       Subscribed(user, usersWithChat: usersWithChat);
 
-  factory TypingNotificationEvent.onTypingEventSent(TypingEvent typingEvent) =>
-      TypingNotificationSent(typingEvent);
+  factory TypingNotificationEvent.onTypingEventSent(List<TypingEvent> typingEvents) =>
+      TypingNotificationSent(typingEvents);
 
   @override
   List<Object> get props => [];
@@ -27,12 +27,12 @@ class Subscribed extends TypingNotificationEvent {
 class NotSubscribed extends TypingNotificationEvent {}
 
 class TypingNotificationSent extends TypingNotificationEvent {
-  final TypingEvent event;
+  final List<TypingEvent> events;
 
-  const TypingNotificationSent(this.event);
+  const TypingNotificationSent(this.events);
 
   @override
-  List<Object> get props => [event];
+  List<Object> get props => [events];
 }
 
 class _TypingNotificationReceived extends TypingNotificationEvent {

@@ -83,12 +83,14 @@ class MessageService implements IMessageService {
   }
 
   @override
-  Future<Message> send(Message message) async {
-    var data = message.toJson();
-
-    if (_encryptionService != null) {
-      data['contents'] = _encryptionService?.encrypt(message.contents!);
-    }
+  Future<Message> send(List<Message> messages) async {
+    final data = messages.map((message) {
+        var data = message.toJson();
+        if (_encryptionService != null) {
+          data['contents'] = _encryptionService?.encrypt(message.contents!);
+        }
+        return data;
+    }).toList();
 
     Map record = await _rethinkdb
         .table('messages')
