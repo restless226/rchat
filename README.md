@@ -1,16 +1,124 @@
-# my_chat_app
+# RChat
 
-A new Flutter application.
+<p align="center">
+  <img src="/images/preview.png" height="450" width="450" hspace="10" vspace="10">
+  <img src="/images/architecture.png "height="450" width="450" hspace="10" vspace="10">
+</p>
+<p align="center">
+  RChat is a <strong>Group Chat Application</strong> made using Flutter, Docker and RethinkDB.<br/>
+  Services Provided are: User Service Message Service, Receipt Service, Typing Notification Service.
+</p>
 
-## Getting Started
+## Installing
 
-This project is a starting point for a Flutter application.
+These instructions will get you a copy of the project set-up and running on your local machine for development purposes.
 
-A few resources to get you started if this is your first Flutter project:
+#### Clone
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+To clone this repository copy and paste the following command in your terminal.
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```
+git clone https://github.com/restless226/rchat.git
+```
+
+#### Prerequisites
+
+These are the prerequisites that you will need to run this app for your own.
+
+- This app uses Docker and NodeJS so you will have to create one for yourself.
+- Android Studio - To build the app for Android devices.
+- XCode - To build the app for IOS devices.
+
+## About
+- A cross-platform group chat application using AES end to end message encryption.
+- Used Bloc Providers and Cubits for state management and performed widget tests for services.
+
+## Tech Stack Used
+- Flutter, Docker, RehinkDB, NodeJS, Sqflite, Android, Dart.
+
+## Built with
+
+- [Flutter](https://flutter.dev/) - The framework
+- [Docker](https://www.docker.com/) - The framework
+- [RethinkDB](https://rethinkdb.com/) - The open-source database
+- [Dart](https://dart.dev/) - The programming language
+
+## Important Packages Used
+
+- [BlocProvider](https://pub.dev/packages/flutter_bloc) - For State Management and dependancy injections.
+- [Cubit](https://pub.dev/documentation/flutter_cubit/latest/) - For State Management.
+- [testUI](https://pub.dev/packages/flutter_test_ui) - For Widget Testing.
+- [RethinkDB](https://pub.dev/packages/rethink_db_ns) - For RethinkDB database usage.
+- [sqflite](https://pub.dev/packages/sqflite) - For creating Chats and Messages tables.
+- [Encrypter](https://pub.dev/packages/encrypt) - For two-way AES implementation.
+- [npm](https://www.npmjs.com/) - For storing Profile Images on node server.
+- [Shared Preferences](https://pub.dev/packages/shared_preferences) - For caching some data.
+- [Google Fonts](https://pub.dev/packages/google_fonts) - For the fonts.
+
+## Screenshots
+
+### Group Chat
+
+|**Group Creation Selecting Members**|**Group Creation Screen**|**Group Created**|
+|---|---|---|
+|<img src="/images/group_creation_selecting_members.png" height="600"/>|<img src="/images/group_creation.png" height="600"/>|<img src="/images/group_teams_created_successfully.png" height="600"/>|
+
+|**Group Chat Unread Message**|
+|---|
+|<img src="/images/group_chat_unread_message.png" height="600"/>|
+
+|**Group Chat Typing Notification**|
+|---|
+|<img src="/images/group_chat_typing_notification.png" height="600"/>|
+
+### Personal Chat
+
+|**Active Chats**|**Active Chats Dark Theme**|**Unread Message is Prioritized over Groups**|
+|---|---|--|
+|<img src="/images/added_active_chats.png" height="600"/>|<img src="/images/added_active_chats.png" height="600"/>|<img src="/images/unread_message_is_prioritized_over_group.png" height="600"/>|
+
+|**Online Status**|
+|---|
+|<img src="/images/online_status.png" height="600"/>|
+
+|**Chats Both Sides**|
+|---|
+|<img src="/images/chat_both_ways.png" height="600"/>|
+
+|**Message Threads Screen Seup**|**Message Sent Working**|
+|---|---|
+|<img src="/images/message_threads_screen_setup.png" height="600"/>|<img src="/images/message_sent_working_successfully.png" height="600"/>|
+
+|**Message Threads Screen Seup**|**Message Sent Working**|
+|---|---|
+|<img src="/images/message_threads_screen_setup.png" height="600"/>|<img src="/images/message_sent_working_successfully.png" height="600"/>|
+
+|**Message Sent**|
+|---|
+|<img src="/images/two_devices_message_sent.png" height="600"/>|
+
+|**Message Read**|
+|---|
+|<img src="/images/two_devices_message_read.png" height="600"/>|
+
+|**Message Typing Notification**|
+|---|
+|<img src="/images/two_devices_typing_notification.png" height="600"/>|
+
+|**Multiple Messages Scroll Till End**|
+|---|
+|<img src="/images/multiple_messages_scroll_till_end.png" height="600"/>|
+
+|**Unread Message**|
+|---|
+|<img src="/images/unread_message.png" height="600"/>|
+
+|**Unread Message**|
+|---|
+|<img src="/images/unread_chat_goes_to_top.png" height="600"/>|
+
+|**Unread Chat goes to top**|
+|---|
+|<img src="/images/unread_chat_goes_to_top.png" height="600"/>|
+
+
