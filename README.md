@@ -57,6 +57,12 @@ These are the prerequisites that you will need to run this app for your own.
 
 ## Screenshots
 
+### Onboarding Screen
+
+|**Without Profile Pic**|**With Profile Pic Light**|**With Profile Pic Dark**|
+|---|---|--|
+|<img src="/images/onboarding_screen_without_profile_pic_dark.jpeg" height="600"/>|<img src="/images/onboarding_screen_with_profile_pic_light.jpeg" height="600"/>|<img src="/images/onboarding_screen_with_profile_pic_dark.jpeg" height="600"/>|
+
 ### Group Chat
 
 |**Group Creation Selecting Members**|**Group Creation Screen**|**Group Created**|
@@ -85,9 +91,7 @@ These are the prerequisites that you will need to run this app for your own.
 |---|
 |<img src="/images/chat_both_ways.png" height="600"/>|
 
-|**Message Threads Screen Seup**|**Message Sent Working**|
-|---|---|
-|<img src="/images/message_threads_screen_setup.png" height="600"/>|<img src="/images/message_sent_working_successfully.png" height="600"/>|
+### Message Functionality
 
 |**Message Threads Screen Seup**|**Message Sent Working**|
 |---|---|
@@ -108,6 +112,8 @@ These are the prerequisites that you will need to run this app for your own.
 |**Multiple Messages Scroll Till End**|
 |---|
 |<img src="/images/multiple_messages_scroll_till_end.png" height="600"/>|
+
+### Unread Messages
 
 |**Unread Message**|
 |---|
