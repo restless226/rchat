@@ -1,7 +1,6 @@
 # RChat
 
 <p align="center">
-  <img src="/images/preview.png" height="450" width="450" hspace="10" vspace="10">
   <img src="/images/architecture.png "height="450" width="450" hspace="10" vspace="10">
 </p>
 <p align="center">
